@@ -80,6 +80,11 @@ fn to_le_bytes(self) -> [u8; Self::NUM_BYTES_IN_REPR];
 fn increment_unchecked(&'_ mut self);
 }
 
+pub trait Extension : Field {
+    /// Performs Frobenius mapping in place.
+    fn frob(&mut self, k: usize) -> ();    
+}
+
 // this field can be used as base field for quadratic extension
 pub trait BaseField : Field {
 const QUADRATIC_NON_RESIDUE: Self;
