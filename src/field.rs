@@ -22,6 +22,7 @@ pub trait Field:
 {
 const ZERO: Self;
 const ONE: Self;
+fn is_zero(&self) -> bool;
 
 fn inverse(&self) -> Option<Self>;
 
@@ -138,7 +139,10 @@ where ExtensionField<F, 2>: std::fmt::Debug + std::fmt::Display
 {
 const ZERO: Self = ExtensionField { coeffs: [F::ZERO; 2] };
 const ONE: Self = ExtensionField { coeffs: [F::ONE, F::ZERO] };
-
+#[inline]
+fn is_zero(&self) -> bool {
+    self.coeffs[0].is_zero() && self.coeffs[1].is_zero()
+}
 #[inline]
 fn add_assign(&'_ mut self, other: &Self) -> &'_ mut Self {
     self.coeffs[0].add_assign(&other.coeffs[0]);
