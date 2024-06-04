@@ -1,4 +1,5 @@
 use core::intrinsics::transmute_unchecked;
+use std::sync::atomic::AtomicU64;
 use rand::Rng;
 pub trait Rand {
     fn random_element<R: Rng + ?Sized>(rng: &mut R) -> Self;
@@ -81,6 +82,8 @@ fn increment_unchecked(&'_ mut self);
 }
 
 pub trait FrobeniusPacking<B : BaseField + PrimeField> : FieldExtension<B> + Field {
+    const x: AtomicU64;
+
     /// Performs Frobenius mapping in place.
     fn frob(&mut self, k: usize) -> ();    
 
@@ -91,12 +94,6 @@ pub trait FrobeniusPacking<B : BaseField + PrimeField> : FieldExtension<B> + Fie
         }
     }
 
-    /// Constructs an element 
-    #[inline(always)]
-    fn pack(elts: [B; Self::DEGREE]) -> Self;
-
-    ///
-    fn unpack(elt: Self) -> [B; Self::DEGREE];
 }
 
 // this field can be used as base field for quadratic extension
