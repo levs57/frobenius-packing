@@ -109,7 +109,7 @@ impl Field for Mersenne31Field {
         if self.is_zero() {
             return None;
         }
-        Some(self.pow(Mersenne31Field::ORDER - 2))
+        Some(self.pow((Mersenne31Field::ORDER - 2) as u64))
     }
     
     fn add_assign(&'_ mut self, other: &Self) -> &'_ mut Self{
