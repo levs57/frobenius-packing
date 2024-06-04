@@ -2,7 +2,8 @@ use std::hash::{Hash, Hasher};
 use std::fmt::{Display, Formatter};
 use std::fmt::Debug;
 use std::ops::BitXorAssign;
-use crate::field::{Field, PrimeField, BaseField, ExtensionField, FieldExtension};
+
+use crate::field::{BaseField, ExtensionField, Field, FieldExtension, FrobeniusPacking, PrimeField, Rand};
 
 #[derive(Clone, Copy)]
 pub struct Mersenne31Field(pub u32);
@@ -322,6 +323,7 @@ impl FieldExtension<Mersenne31Field> for Mersenne31Quartic {
     }
 }
 
+impl FrobeniusPacking<Mersenne31Field> for Mersenne31Quartic {}
 
 pub fn rand_fp_from_rng<R: rand::Rng>(rng: &mut R) -> Mersenne31Field {
     Mersenne31Field::from_u64_unchecked(rng.gen_range(0..((1 << 31) - 1)))
@@ -355,5 +357,31 @@ impl std::fmt::Debug for Mersenne31Quartic{
 impl std::fmt::Display for Mersenne31Quartic {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "F4[{}, {}, {}, {}]", self.coeffs[0].coeffs[0], self.coeffs[0].coeffs[1], self.coeffs[1].coeffs[0], self.coeffs[1].coeffs[1])
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use rand::rngs::OsRng;
+    use super::*;
+
+    #[test]
+    fn test_frobenius_parity() {
+        let rng = &mut OsRng;
+        let x = Mersenne31Quartic::random_element(rng);
+        let precomp = &Mersenne31Quartic::precompute_frobenius_images();
+        (0..<Mersenne31Quartic as FieldExtension<Mersenne31Field>>::DEGREE as i32).map(|i| {
+            let mut l = x;
+            let mut r = x;
+            assert_eq!(l.frob_naive(i), r.frob(i, precomp));
+        }).count();
+
+        for i in 0..100 as i32 {
+            let mut y = x;
+            //println!("{}", (-i).rem_euclid(4));
+            y.frob(i, precomp);
+            y.frob(-i, precomp);
+            assert_eq!(y, x);
+        }
     }
 }

@@ -1,5 +1,4 @@
 use core::intrinsics::transmute_unchecked;
-use std::sync::atomic::AtomicU64;
 use rand::Rng;
 pub trait Rand {
     fn random_element<R: Rng + ?Sized>(rng: &mut R) -> Self;
@@ -83,18 +82,46 @@ fn increment_unchecked(&'_ mut self);
 }
 
 pub trait FrobeniusPacking<B : BaseField + PrimeField> : FieldExtension<B> + Field {
-    const x: AtomicU64;
 
     /// Performs Frobenius mapping in place.
-    fn frob(&mut self, k: usize) -> ();    
+    fn frob(&mut self, k: i32, frobenius_precomp: &[[Self; Self::DEGREE]; Self::DEGREE]) -> () {
+        let k = k.rem_euclid(Self::DEGREE as i32) as usize;
+        *self = self
+            .into_coeffs_in_base()
+            .iter()
+            .enumerate()
+            .fold(Self::ZERO, |mut acc, (i, coeff)| {
+                *acc.add_assign(frobenius_precomp[k][i].clone().mul_assign_by_base(coeff))
+            });
+    }
 
-    fn frob_naive(&mut self, mut k: usize) -> () {
-        k %= Self::DEGREE;
+    fn frob_naive(&mut self, k: i32) -> () {
+        let k = k.rem_euclid(Self::DEGREE as i32) as usize; // this is NOT a % operation ;)
         for _ in 0..k {
             *self = self.pow(B::CHARACTERISTICS as u64)
         }
     }
 
+    /// Computes the images of Frobenius of basis elements.
+    /// First coordinate encodes power of Frobenius, second coordinate - index of the basis element.
+    fn precompute_frobenius_images() -> [[Self; Self::DEGREE]; Self::DEGREE] {
+        let mut indices : [_; Self::DEGREE] = [0; Self::DEGREE];
+        indices.iter_mut().enumerate().map(|(i, x)| *x = i).count();
+        
+        let mut basis_pows = indices.clone().map(|i| {
+            let mut coeffs = [B::ZERO; Self::DEGREE];
+            coeffs[i].add_assign(&B::ONE);
+            Self::from_coeffs_in_base(&coeffs)
+        });
+
+        let ret = indices.map(|_| {
+            let _basis_pows = basis_pows.clone();
+            let _ = &basis_pows.each_mut().map(|elt| *elt = elt.pow(B::CHARACTERISTICS as u64));
+            _basis_pows
+        });
+
+        ret
+    }
 }
 
 // this field can be used as base field for quadratic extension
@@ -348,7 +375,7 @@ fn from_coeffs_in_base(coeffs: &[F]) -> Self {
 
 #[inline(always)]
 fn from_base(elem: F) -> Self {
-    let mut coeffs =  std::array::from_fn(|idx: usize| {
+    let coeffs =  std::array::from_fn(|idx: usize| {
         if idx == 0 { elem } else { F::ZERO }
     });
     Self { coeffs }
