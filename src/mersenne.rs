@@ -384,4 +384,13 @@ mod tests {
             assert_eq!(y, x);
         }
     }
+
+    #[test]
+    fn test_coeffs_in_base() {
+        let rng = &mut OsRng;
+        let x = Mersenne31Quartic::random_element(rng);
+        let lhs = <Mersenne31Quartic as FieldExtension<Mersenne31Field>>::into_coeffs_in_base(x);
+        let rhs = <Mersenne31Quartic as FieldExtension<Mersenne31Field>>::coeffs_in_base(&x);
+        assert_eq!(lhs, rhs);
+    }
 }
