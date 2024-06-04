@@ -30,13 +30,13 @@ fn sub_assign(&'_ mut self, other: &Self) -> &'_ mut Self;
 
 fn mul_assign(&'_ mut self, other: &Self) -> &'_ mut Self;
 
-fn square(&mut self) -> ();
+fn square(&'_ mut self) -> &'_ mut Self;
 
-fn negate(&mut self) -> ();
+fn negate(&'_ mut self) -> &'_ mut Self;
 
-fn double(&mut self) -> ();
+fn double(&'_ mut self) -> &'_ mut Self;
 
-fn pow(&mut self, mut exp: u64) -> () {
+fn pow(&self, mut exp: u64) -> Self {
     let mut base = self.clone();
     let mut result = Self::ONE;
     while exp > 0 {
@@ -48,7 +48,7 @@ fn pow(&mut self, mut exp: u64) -> () {
         base.square();
     }
 
-    *self = result;
+    result
 }
 
 fn mul_by_two(&'_ mut self) -> &'_ mut Self { unimplemented!() }
@@ -87,9 +87,16 @@ pub trait FrobeniusPacking<B : BaseField + PrimeField> : FieldExtension<B> + Fie
     fn frob_naive(&mut self, mut k: usize) -> () {
         k %= Self::DEGREE;
         for _ in 0..k {
-            self.pow(B::CHARACTERISTICS as u64)
+            *self = self.pow(B::CHARACTERISTICS as u64)
         }
     }
+
+    /// Constructs an element 
+    #[inline(always)]
+    fn pack(elts: [B; Self::DEGREE]) -> Self;
+
+    ///
+    fn unpack(elt: Self) -> [B; Self::DEGREE];
 }
 
 // this field can be used as base field for quadratic extension
