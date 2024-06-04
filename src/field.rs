@@ -30,13 +30,13 @@ fn sub_assign(&'_ mut self, other: &Self) -> &'_ mut Self;
 
 fn mul_assign(&'_ mut self, other: &Self) -> &'_ mut Self;
 
-fn square(&'_ mut self) -> &'_ mut Self;
+fn square(&mut self) -> ();
 
-fn negate(&'_ mut self) -> &'_ mut Self;
+fn negate(&mut self) -> ();
 
-fn double(&'_ mut self) -> &'_ mut Self;
+fn double(&mut self) -> ();
 
-fn pow(&self, mut exp: u32) -> Self {
+fn pow(&mut self, mut exp: u64) -> () {
     let mut base = self.clone();
     let mut result = Self::ONE;
     while exp > 0 {
@@ -48,7 +48,7 @@ fn pow(&self, mut exp: u32) -> Self {
         base.square();
     }
 
-    result
+    *self = result;
 }
 
 fn mul_by_two(&'_ mut self) -> &'_ mut Self { unimplemented!() }
@@ -80,9 +80,16 @@ fn to_le_bytes(self) -> [u8; Self::NUM_BYTES_IN_REPR];
 fn increment_unchecked(&'_ mut self);
 }
 
-pub trait Extension : Field {
+pub trait FrobeniusPacking<B : BaseField + PrimeField> : FieldExtension<B> + Field {
     /// Performs Frobenius mapping in place.
     fn frob(&mut self, k: usize) -> ();    
+
+    fn frob_naive(&mut self, mut k: usize) -> () {
+        k %= Self::DEGREE;
+        for _ in 0..k {
+            self.pow(B::CHARACTERISTICS as u64)
+        }
+    }
 }
 
 // this field can be used as base field for quadratic extension
@@ -167,7 +174,7 @@ fn mul_assign(&'_ mut self, other: &Self) -> &'_ mut Self {
 }
 
 #[inline]
-fn square(&mut self) -> &mut Self {
+fn square(&mut self) -> () {
     let mut v0 = self.coeffs[0];
     v0.sub_assign(&self.coeffs[1]);
     let mut v3 = self.coeffs[0];
@@ -184,24 +191,18 @@ fn square(&mut self) -> &mut Self {
     self.coeffs[0] = v0;
     F::mul_by_non_residue(&mut v2);
     self.coeffs[0].add_assign(&v2);
-
-    self
 }
 
 #[inline]
-fn negate(&mut self) -> &mut Self {
+fn negate(&mut self) -> () {
     self.coeffs[0].negate();
     self.coeffs[1].negate();
-
-    self
 }
 
 #[inline]
-fn double(&mut self) -> &mut Self {
+fn double(&mut self) -> () {
     self.coeffs[0].double();
     self.coeffs[1].double();
-
-    self
 }
 
 fn inverse(&self) -> Option<Self> {
