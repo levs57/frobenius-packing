@@ -1,3 +1,10 @@
+#![feature(generic_const_exprs)]
+#![feature(core_intrinsics)]
+
+pub mod mersenne;
+pub mod field;
+
+
 pub fn add(left: usize, right: usize) -> usize {
     left + right
 }
