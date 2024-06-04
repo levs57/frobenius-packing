@@ -185,11 +185,7 @@ fn mul_assign(&'_ mut self, other: &Self) -> &'_ mut Self {
 }
 
 #[inline]
-<<<<<<< HEAD
-fn square(&mut self) -> &'_ mut Self{
-=======
 fn square(&'_ mut self) -> &'_ mut Self {
->>>>>>> c7f2ba8e7cc60e396bbb4da449d2b9dd4bf3f58f
     let mut v0 = self.coeffs[0];
     v0.sub_assign(&self.coeffs[1]);
     let mut v3 = self.coeffs[0];
@@ -210,11 +206,7 @@ fn square(&'_ mut self) -> &'_ mut Self {
 }
 
 #[inline]
-<<<<<<< HEAD
-fn negate(&mut self) -> &'_ mut Self{
-=======
 fn negate(&'_ mut self) -> &'_ mut Self {
->>>>>>> c7f2ba8e7cc60e396bbb4da449d2b9dd4bf3f58f
     self.coeffs[0].negate();
     self.coeffs[1].negate();
     self
