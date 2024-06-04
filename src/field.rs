@@ -181,7 +181,7 @@ fn mul_assign(&'_ mut self, other: &Self) -> &'_ mut Self {
 }
 
 #[inline]
-fn square(&mut self) -> () {
+fn square(&'_ mut self) -> &'_ mut Self {
     let mut v0 = self.coeffs[0];
     v0.sub_assign(&self.coeffs[1]);
     let mut v3 = self.coeffs[0];
@@ -198,18 +198,21 @@ fn square(&mut self) -> () {
     self.coeffs[0] = v0;
     F::mul_by_non_residue(&mut v2);
     self.coeffs[0].add_assign(&v2);
+    self
 }
 
 #[inline]
-fn negate(&mut self) -> () {
+fn negate(&'_ mut self) -> &'_ mut Self {
     self.coeffs[0].negate();
     self.coeffs[1].negate();
+    self
 }
 
 #[inline]
-fn double(&mut self) -> () {
+fn double(&mut self) -> &'_ mut Self {
     self.coeffs[0].double();
     self.coeffs[1].double();
+    self
 }
 
 fn inverse(&self) -> Option<Self> {
